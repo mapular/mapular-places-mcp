@@ -1,0 +1,45 @@
+{
+  "name": "@mapular/places-mcp",
+  "version": "0.1.0",
+  "description": "General-purpose MCP server for Google Places API Nearby Search with explicit field-mask control.",
+  "main": "dist/server.js",
+  "type": "module",
+  "bin": {
+    "mapular-places-mcp": "dist/server.js"
+  },
+  "files": [
+    "dist",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "build": "tsc",
+    "test": "npm run build",
+    "exec": "tsx src/server.ts exec",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "google-places",
+    "nearby-search",
+    "places-api",
+    "field-mask",
+    "mapular"
+  ],
+  "author": "Mapular",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
