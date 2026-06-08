@@ -30,6 +30,14 @@
   ],
   "author": "Mapular",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mapular/mapular-places-mcp.git"
+  },
+  "homepage": "https://github.com/mapular/mapular-places-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/mapular/mapular-places-mcp/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^4.4.3"
