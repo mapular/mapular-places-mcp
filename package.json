@@ -1,6 +1,6 @@
 {
   "name": "@mapular/places-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "General-purpose MCP server for Google Places API Nearby Search with explicit field-mask control.",
   "main": "dist/server.js",
   "type": "module",

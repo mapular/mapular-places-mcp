@@ -7,6 +7,7 @@ import { z } from "zod";
 const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 const PLACES_BASE_URL = "https://places.googleapis.com/v1/places";
 const GOOGLE_PLACES_NEARBY_TOOL_NAME = "google_places_nearby_search";
+const GOOGLE_PLACES_TEXT_TOOL_NAME = "google_places_text_search";
 
 const DEFAULT_NEARBY_FIELD_MASKS = [
   "places.id",
@@ -24,6 +25,19 @@ const DEFAULT_NEARBY_FIELD_MASKS = [
 
 const DEFAULT_NEARBY_FIELD_MASK = DEFAULT_NEARBY_FIELD_MASKS.join(",");
 
+const DEFAULT_TEXT_FIELD_MASK = [
+  "places.id",
+  "places.displayName",
+  "places.primaryType",
+  "places.primaryTypeDisplayName",
+  "places.types",
+  "places.formattedAddress",
+  "places.location",
+  "places.userRatingCount",
+  "places.websiteUri",
+  "places.nationalPhoneNumber",
+].join(",");
+
 const TOOL_ANNOTATIONS = {
   readOnlyHint: true,
   destructiveHint: false,
@@ -34,6 +48,16 @@ const TOOL_ANNOTATIONS = {
 type Circle = {
   center: { latitude: number; longitude: number };
   radius: number;
+};
+
+type TextSearchArgs = {
+  textQuery: string;
+  center: { latitude: number; longitude: number };
+  locationBiasRadius?: number;
+  maxResultCount?: number;
+  languageCode: string;
+  regionCode?: string;
+  fieldMask?: string[] | string;
 };
 
 type NearbySearchArgs = {
@@ -99,8 +123,8 @@ function parseCoordinates(value: string): { latitude: number; longitude: number 
   return { latitude, longitude };
 }
 
-function normalizeFieldMask(fieldMask?: string[] | string): string {
-  if (!fieldMask) return DEFAULT_NEARBY_FIELD_MASK;
+function normalizeFieldMask(fieldMask?: string[] | string, defaultMask = DEFAULT_NEARBY_FIELD_MASK): string {
+  if (!fieldMask) return defaultMask;
 
   let fields: string[];
   if (Array.isArray(fieldMask)) {
@@ -119,7 +143,7 @@ function normalizeFieldMask(fieldMask?: string[] | string): string {
   }
 
   const normalized = [...new Set(fields.map((field) => field.trim()).filter(Boolean))];
-  if (!normalized.length) return DEFAULT_NEARBY_FIELD_MASK;
+  if (!normalized.length) return defaultMask;
 
   const invalid = normalized.filter((field) => !field.startsWith("places."));
   if (invalid.length) {
@@ -215,6 +239,33 @@ async function nearbySearch(args: NearbySearchArgs) {
   };
 }
 
+async function textSearch(args: TextSearchArgs) {
+  const fieldMask = normalizeFieldMask(args.fieldMask, DEFAULT_TEXT_FIELD_MASK);
+  const requestBody: Record<string, unknown> = {
+    textQuery: args.textQuery,
+    locationBias: {
+      circle: {
+        center: args.center,
+        radius: args.locationBiasRadius ?? 2000,
+      },
+    },
+    maxResultCount: args.maxResultCount ?? 20,
+    languageCode: args.languageCode,
+  };
+
+  if (args.regionCode) requestBody.regionCode = args.regionCode;
+
+  const response = await googlePost(":searchText", requestBody, fieldMask, "Places Text Search");
+
+  return {
+    success: true,
+    googleEndpoint: "places:searchText",
+    fieldMask: fieldMask.split(","),
+    request: requestBody,
+    places: response.places ?? [],
+  };
+}
+
 function jsonToolResult(data: unknown) {
   return {
     content: [
@@ -262,6 +313,25 @@ const tools: ToolConfig[] = [
         .describe("Field mask as a JSON array of places.* strings. Do not pass a JSON-encoded string."),
     },
     action: nearbySearch,
+  },
+  {
+    name: GOOGLE_PLACES_TEXT_TOOL_NAME,
+    description:
+      "Google Places API (New) Text Search. Use for keyword-driven searches (e.g. 'Orthopäde', 'Physiotherapie Praxis') where Nearby Search cannot distinguish medical subspecialties via type alone. Applies a soft locationBias circle (default 2000m); results outside the radius may still be returned — the caller is responsible for hard distance filtering. Supports textQuery, center, locationBiasRadius, maxResultCount, languageCode, regionCode, and explicit places.* field masks.",
+    schema: {
+      textQuery: z.string().min(1).max(500).describe("Search term, e.g. 'Orthopäde' or 'Physiotherapie Praxis'."),
+      center: latLngSchema,
+      locationBiasRadius: z.number().min(1).max(50000).optional().describe("Soft bias radius in metres (default 2000). Results outside this radius may still be returned."),
+      maxResultCount: z.number().min(1).max(20).optional(),
+      languageCode: z.string().min(2).max(10),
+      regionCode: z.string().min(2).max(2).optional(),
+      fieldMask: z
+        .array(z.string().min(1))
+        .min(1)
+        .optional()
+        .describe("Field mask as a JSON array of places.* strings. Defaults to standard text search fields including places.location for distance filtering."),
+    },
+    action: textSearch,
   },
 ];
 
