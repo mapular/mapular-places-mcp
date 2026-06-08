@@ -177,6 +177,31 @@ Run one tool call from the terminal:
 GOOGLE_MAPS_API_KEY=your_key npm run exec -- google_places_nearby_search '{"center":{"latitude":52.5288656,"longitude":13.4560194},"radius":400,"includedTypes":["physiotherapist"]}'
 ```
 
+Google-style `locationRestriction`:
+
+```bash
+GOOGLE_MAPS_API_KEY=your_key npm run exec -- google_places_nearby_search '{"locationRestriction":{"circle":{"center":{"latitude":52.5288656,"longitude":13.4560194},"radius":400}},"includedTypes":["doctor","medical_clinic","medical_center","general_hospital","hospital"],"maxResultCount":20,"rankPreference":"POPULARITY","languageCode":"de","regionCode":"DE"}'
+```
+
+Strict field-mask example:
+
+```bash
+GOOGLE_MAPS_API_KEY=your_key npm run exec -- google_places_nearby_search '{"center":{"value":"52.5288656,13.4560194","isCoordinates":true},"radius":400,"includedTypes":["physiotherapist"],"fieldMask":["places.id","places.displayName","places.primaryType","places.types","places.formattedAddress","places.location","places.rating","places.userRatingCount","places.googleMapsUri","places.websiteUri","places.nationalPhoneNumber"]}'
+```
+
+## Legal & attribution
+
+This MCP server calls the Google Places API on your behalf using your own API key.
+
+**You are responsible for:**
+
+- Complying with the [Google Maps Platform Terms of Service](https://cloud.google.com/maps-platform/terms)
+- Displaying attribution ("Powered by Google") wherever Places data is shown to end users, as required by Google's [attribution policy](https://developers.google.com/maps/documentation/places/web-service/policies#attribution)
+- All API usage costs billed to your Google Cloud project
+- Ensuring your use case is permitted under the Google Maps Platform Terms
+
+Mapular does not receive your API key, query data, or results. All requests go directly from your machine to Google.
+
 ## License
 
 Apache-2.0

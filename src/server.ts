@@ -59,6 +59,12 @@ type ToolConfig = {
   action: (params: any) => Promise<any>;
 };
 
+const placeTypeSchema = z
+  .string()
+  .min(1)
+  .max(100)
+  .regex(/^[a-z][a-z0-9_]*$/, 'Place type must be lowercase letters, digits, and underscores (e.g. "restaurant", "physiotherapist")');
+
 const latLngSchema = z.object({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
@@ -241,10 +247,10 @@ const tools: ToolConfig[] = [
       center: z.union([latLngSchema, coordinateStringSchema]).optional(),
       radius: z.number().min(1).max(50000).optional(),
       radiusMeters: z.number().min(1).max(50000).optional(),
-      includedTypes: z.array(z.string().min(1)).min(1).max(50).optional(),
-      excludedTypes: z.array(z.string().min(1)).min(1).max(50).optional(),
-      includedPrimaryTypes: z.array(z.string().min(1)).min(1).max(50).optional(),
-      excludedPrimaryTypes: z.array(z.string().min(1)).min(1).max(50).optional(),
+      includedTypes: z.array(placeTypeSchema).min(1).max(50).optional(),
+      excludedTypes: z.array(placeTypeSchema).min(1).max(50).optional(),
+      includedPrimaryTypes: z.array(placeTypeSchema).min(1).max(50).optional(),
+      excludedPrimaryTypes: z.array(placeTypeSchema).min(1).max(50).optional(),
       maxResultCount: z.number().min(1).max(20).optional(),
       rankPreference: z.enum(["POPULARITY", "DISTANCE"]).optional(),
       languageCode: z.string().min(2).max(10).optional(),
